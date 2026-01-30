@@ -1,0 +1,184 @@
+[Uploading index.html…]()
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo App </title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f2f2f2;
+      }
+
+      .box {
+        width: 500px;
+        min-height: 500px;
+        border-radius: 10px;
+        box-shadow: 1px 11px 22px #ccc;
+        margin: 20px auto;
+        padding: 20px;
+      }
+
+      #todo_list {
+        list-style: none;
+        padding: 0;
+      }
+
+      #todo_list li {
+        margin: 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      #todo_list li span {
+        width: 100%;
+      }
+
+      button {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <center>
+      <div class="box">
+        <label>Todo:</label>
+        <input id="todo_input" type="text" placeholder="Enter your todo" />
+        <input type="button" value="Add" id="btn_add" />
+        <hr />
+        <ul id="todo_list"></ul>
+      </div>
+    </center>
+    <script>
+      let todo_arr = [];
+      let nextId = 1;
+      let todo_list = document.getElementById("todo_list");
+      let btn_add = document.getElementById("btn_add");
+      let todo_input = document.getElementById("todo_input");
+      let status = "add"; // add or edit
+      let global_index = -1; // index being edited
+
+      // Re-index IDs after delete
+      function reindexTodos() {
+        for (let i = 0; i < todo_arr.length; i++) {
+          todo_arr[i].id = i + 1;
+        }
+        nextId = todo_arr.length + 1;
+      }
+
+      // Render todo list
+      function renderTodolist() {
+        let html = "";
+
+        for (let i = 0; i < todo_arr.length; i++) {
+          let item = todo_arr[i];
+
+          let task_name = `<strong>${item.id}.</strong> ${item.task}`;
+          let btn_done = `<button onclick="toggleDone(${item.id})">✅</button>`;
+
+          if (item.isDone) {
+            task_name = `<del><strong>${item.id}.</strong> ${item.task}</del>`;
+            btn_done = `<button onclick="toggleDone(${item.id})">↩️</button>`;
+          }
+
+          html += `
+        <li>
+          <span>${task_name}</span>
+          ${btn_done}
+          <button onclick="getEdit(${item.id})">✏️</button>
+          <button onclick="deleteTodo(${item.id})">❌</button>
+        </li>
+      `;
+        }
+
+        todo_list.innerHTML = html;
+      }
+
+      // Add or Edit todo
+      btn_add.addEventListener("click", function () {
+        let todo_text = todo_input.value.trim();
+        if (todo_text === "") {
+          alert("Please enter your todo");
+          return;
+        }
+
+        // ✅ DUPLICATE CHECK
+        for (let i = 0; i < todo_arr.length; i++) {
+          if (
+            todo_arr[i].task.toLowerCase() === todo_text.toLowerCase() &&
+            i !== global_index
+          ) {
+            alert("This task already exists!");
+            return;
+          }
+        }
+
+        if (status === "add") {
+          todo_arr.push({ id: nextId++, task: todo_text, isDone: false });
+        } else {
+          todo_arr[global_index].task = todo_text;
+        }
+
+        clearForm();
+        renderTodolist();
+      });
+
+      todo_input.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") btn_add.click();
+      });
+
+      function deleteTodo(id) {
+        for (let i = 0; i < todo_arr.length; i++) {
+          if (todo_arr[i].id === id) {
+            if (confirm("Delete this todo?")) {
+              todo_arr.splice(i, 1);
+              reindexTodos();
+              clearForm();
+              renderTodolist();
+            }
+            break;
+          }
+        }
+      }
+
+      function getEdit(id) {
+        for (let i = 0; i < todo_arr.length; i++) {
+          if (todo_arr[i].id === id) {
+            todo_input.value = todo_arr[i].task;
+            status = "edit";
+            global_index = i;
+            btn_add.value = "Edit";
+            todo_input.focus();
+            renderTodolist(); // update Undo button
+            break;
+          }
+        }
+      }
+
+      function cancelEdit() {
+        clearForm();
+        renderTodolist();
+      }
+
+      function toggleDone(id) {
+        for (let i = 0; i < todo_arr.length; i++) {
+          if (todo_arr[i].id === id) {
+            todo_arr[i].isDone = !todo_arr[i].isDone;
+            break;
+          }
+        }
+        renderTodolist();
+      }
+
+      function clearForm() {
+        todo_input.value = "";
+        status = "add";
+        global_index = -1;
+        btn_add.value = "Add";
+      }
+    </script>
+  </body>
+</html>
